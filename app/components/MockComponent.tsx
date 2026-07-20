@@ -11,20 +11,31 @@
  *   - Prefer loading Flask data in a route loader, then pass it down here.
  */
 
+import type {TextareaHTMLAttributes,ReactNode } from "react";
+export type MockComponentAlternate = "main" | "alternate" | "test";
+
 export type MockComponentProps = {
   /** Optional label so you can see the stub on the page while designing. */
   title?: string;
-  /** Optional extra class names from the parent. */
+
   className?: string;
+  alternate?: MockComponentAlternate;
+  children: ReactNode; //MYCOMMENT: Need to see if this is necassary for this component
   // Add real props here, e.g.:
   // product: Product;
   // onAddToCart?: (productId: number) => void;
+} & Omit<TextareaHTMLAttributes<HTMLTextAreaElement>,"className">;
+
+
+//Tailwind Class Map 
+const alternateClasses: Record<MockComponentAlternate, string> = {
+  main:["bg-stone-900 text-stone-50"].join(" "),
+  alternate:["bg-transparent text-stone-900"].join(" "),
+  test:["bg-transparent text-stone-700"].join(" "),
 };
 
-/**
- * Placeholder presentational component.
- * Replace the markup and styles when you build the real UI.
- */
+
+
 export function MockComponent({
   title = "Mock component",
   className = "",
