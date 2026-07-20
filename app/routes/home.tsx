@@ -14,6 +14,7 @@ import { getHealth } from "~/lib/api";
 import { ApiError, type HealthStatus } from "~/lib/types";
 import type { Route } from "./+types/home";
 import { Welcome } from "../welcome/welcome";
+import { MockButton } from "~/components/MockButton";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -76,6 +77,7 @@ export default function Home() {
         )}
       </div>
       <Welcome />
+      <MockButton>Add to cart</MockButton>
     </>
   );
 }
