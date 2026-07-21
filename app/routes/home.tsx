@@ -79,7 +79,7 @@ export default function Home() {
       </div>
       <Welcome />
       <MockButton>Add to cart</MockButton>
-      <MockComponent defaultValue="Write a product review..." />
+      <MockComponent defaultValue="Write a product review..."  alternate="alternate"/>
     </>
   );
 }
