@@ -20,7 +20,6 @@ export type MockComponentProps = {
 
   className?: string;
   alternate?: MockComponentAlternate;
-  children: ReactNode; //MYCOMMENT: Need to see if this is necassary for this component
   // Add real props here, e.g.:
   // product: Product;
   // onAddToCart?: (productId: number) => void;
