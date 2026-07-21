@@ -37,13 +37,25 @@ const alternateClasses: Record<MockComponentAlternate, string> = {
 
 
 export function MockComponent({
+  defaultValue,
   title = "Mock component",
   className = "",
+  //type = "textarea",
+  alternate = "main",
+  ...rest
 }: MockComponentProps) {
   return (
-    <div className={className}>
-      {/* TODO: replace with your layout / Tailwind styles */}
-      <p>{title}</p>
-    </div>
+      <textarea
+      className={[
+        alternateClasses[alternate],
+        className,
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      
+      {...rest}
+      >
+      {defaultValue}
+      </textarea>
   );
 }
