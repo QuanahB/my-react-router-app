@@ -16,6 +16,7 @@ import type { Route } from "./+types/home";
 import { Welcome } from "../welcome/welcome";
 import { MockButton } from "~/components/MockButton";
 import { MockComponent } from "~/components/MockComponent";
+import { Logo } from "~/components/Logo";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -80,6 +81,7 @@ export default function Home() {
       <Welcome />
       <MockButton>Add to cart</MockButton>
       <MockComponent defaultValue="Write a product review..."  alternate="alternate"/>
+      <Logo></Logo>
     </>
   );
 }

@@ -6,6 +6,7 @@ export type LogoProps = {
     title?: string;
     className?: string;
     alternate?: LogoAlternate;
+    src?: string;
 
 } & Omit<ImgHTMLAttributes<HTMLImageElement>,"className">;
 
@@ -19,12 +20,14 @@ export function Logo({
     title = "Website Logo",
     className = "",
     alternate = "main",
+    src = LogoImage,//"~/assets/birdLogo.avif"
     ...rest
 }: LogoProps){
     return(
         <img
         className={[
             className,
+            src,
             alternateClasses[alternate]
         ]
             .filter(Boolean)
