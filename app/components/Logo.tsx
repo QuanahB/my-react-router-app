@@ -25,9 +25,9 @@ export function Logo({
 }: LogoProps){
     return(
         <img
+        src={src}
         className={[
             className,
-            src,
             alternateClasses[alternate]
         ]
             .filter(Boolean)
