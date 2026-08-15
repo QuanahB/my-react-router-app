@@ -1,4 +1,3 @@
-
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 export type SelectorVariant = "primary" | "secondary" | "ghost";
 
@@ -39,7 +38,7 @@ const variantClasses: Record<SelectorVariant, string> = {
   ].join(" "),
 };
 
-export function MockButton({
+export function SelectorComponent({
   children,
   variant = "primary",
   className = "",

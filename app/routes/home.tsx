@@ -17,6 +17,7 @@ import { Welcome } from "../welcome/welcome";
 import { MockButton } from "~/components/MockButton";
 import { MockComponent } from "~/components/MockComponent";
 import { Logo } from "~/components/Logo";
+import { BannerComponent } from "~/components/BannerComponent";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -78,6 +79,7 @@ export default function Home() {
           </>
         )}
       </div>
+      <BannerComponent></BannerComponent>
       <Welcome />
       <MockButton>Add to cart</MockButton>
       <MockComponent defaultValue="Write a product review..."  alternate="alternate"/>

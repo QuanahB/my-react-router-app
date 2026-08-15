@@ -1,5 +1,6 @@
 import type { HTMLAttributes,ReactNode } from "react";
 export type BannerAlternate = "main" | "alternate";
+import { SelectorComponent } from "./SelectorComponent";
 
 export type BannerProps = {
     className?: string;
@@ -18,8 +19,19 @@ export function BannerComponent({
 }: BannerProps){
     return(
         <div
-
+            className={[
+            "flex w-full items-center justify-evenly",
+            alternateClasses[alternate],
+            className,
+        ]
+            .filter(Boolean)
+            .join(" ")}
+        {...rest}
         >
+            <SelectorComponent>Home</SelectorComponent>
+            <SelectorComponent>Shop</SelectorComponent>
+            <SelectorComponent>Cart</SelectorComponent>
+            <SelectorComponent>Account</SelectorComponent>
         </div>
     );
 }
