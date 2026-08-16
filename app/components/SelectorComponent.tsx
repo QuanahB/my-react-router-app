@@ -1,3 +1,5 @@
+// MUST MAKE LINKS AS A PROP TO PASS INTO THE COMPONENT
+
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 export type SelectorVariant = "primary" | "secondary" | "ghost";
 

@@ -18,6 +18,7 @@ import { MockButton } from "~/components/MockButton";
 import { MockComponent } from "~/components/MockComponent";
 import { Logo } from "~/components/Logo";
 import { BannerComponent } from "~/components/BannerComponent";
+import { HomepageContainer } from "~/components/HomepageContainer";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -80,6 +81,22 @@ export default function Home() {
         )}
       </div>
       <BannerComponent></BannerComponent>
+      <HomepageContainer
+        slides={[
+          {
+            left: <Logo />,
+            right: <p className="p-4">Slide 1 — featured product</p>,
+          },
+          {
+            left: <p className="p-4 text-2xl font-semibold">Summer sale</p>,
+            right: <p className="p-4">Slide 2 — promo copy</p>,
+          },
+          {
+            left: <p className="p-4 text-2xl font-semibold">New arrivals</p>,
+            right: <MockButton>Shop now</MockButton>,
+          },
+        ]}
+      />
       <Welcome />
       <MockButton>Add to cart</MockButton>
       <MockComponent defaultValue="Write a product review..."  alternate="alternate"/>
