@@ -28,9 +28,9 @@ export function BannerComponent({
             .join(" ")}
         {...rest}
         >
-            <SelectorComponent>Home</SelectorComponent>
-            <SelectorComponent>Shop</SelectorComponent>
-            <SelectorComponent>Cart</SelectorComponent>
+            <SelectorComponent to="/">Home</SelectorComponent>
+            <SelectorComponent to="/shop">Shop</SelectorComponent>
+            <SelectorComponent to="/cart">Cart</SelectorComponent>
             <SelectorComponent>Account</SelectorComponent>
         </div>
     );

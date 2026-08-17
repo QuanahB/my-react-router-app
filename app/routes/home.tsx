@@ -17,8 +17,9 @@ import { Welcome } from "../welcome/welcome";
 import { MockButton } from "~/components/MockButton";
 import { MockComponent } from "~/components/MockComponent";
 import { Logo } from "~/components/Logo";
-import { BannerComponent } from "~/components/BannerComponent";
 import { HomepageContainer } from "~/components/HomepageContainer";
+import { ProductImage } from "~/components/ProductImage";
+import { DescriptionPanel } from "~/components/DescriptionPanel";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -80,12 +81,13 @@ export default function Home() {
           </>
         )}
       </div>
-      <BannerComponent></BannerComponent>
       <HomepageContainer
         slides={[
           {
-            left: <Logo />,
-            right: <p className="p-4">Slide 1 — featured product</p>,
+            left: <ProductImage alt="Featured product" />,
+            right: (
+              <DescriptionPanel text="Featured product — hover the large image for a preview clip." />
+            ),
           },
           {
             left: <p className="p-4 text-2xl font-semibold">Summer sale</p>,

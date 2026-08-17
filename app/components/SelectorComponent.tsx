@@ -1,8 +1,9 @@
 // MUST MAKE LINKS AS A PROP TO PASS INTO THE COMPONENT
 
 import type { ButtonHTMLAttributes, ReactNode } from "react";
-export type SelectorVariant = "primary" | "secondary" | "ghost";
+import { Link } from "react-router";
 
+export type SelectorVariant = "primary" | "secondary" | "ghost";
 
 export type SelectorProps = {
   /** Visible content inside the button (required). */
@@ -11,6 +12,8 @@ export type SelectorProps = {
   variant?: SelectorVariant;
 
   className?: string;
+  /** When set, renders a React Router <Link> instead of a <button>. */
+  to?: string;
 } & Omit<ButtonHTMLAttributes<HTMLButtonElement>, "className">;
 
 const variantClasses: Record<SelectorVariant, string> = {
@@ -46,45 +49,34 @@ export function SelectorComponent({
   className = "",
   type = "button",
   disabled,
+  to,
   ...rest
 }: SelectorProps) {
+  const classes = [
+    "inline-flex items-center justify-center gap-2",
+    "px-5 py-2.5",
+    "rounded-md",
+    "text-sm font-medium tracking-wide",
+    "transition-colors duration-150 ease-out",
+    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600",
+    "disabled:cursor-not-allowed disabled:opacity-70",
+    "no-underline",
+    variantClasses[variant],
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  if (to) {
+    return (
+      <Link to={to} className={classes}>
+        {children}
+      </Link>
+    );
+  }
+
   return (
-    <button
-      type={type}
-      disabled={disabled}
-      className={[
-        // --- Layout / box model (shared by every variant) ---
-        "inline-flex items-center justify-center gap-2", // flex row; centers label + optional icon; gap between them
-        "px-5 py-2.5", // horizontal / vertical padding (click target size)
-        "rounded-md", // modest corner radius (not a full pill)
-
-        // --- Typography ---
-        "text-sm font-medium tracking-wide", // small, medium weight, slight letter-spacing
-
-        // --- Motion ---
-        // Only animate color so hover feels smooth without bouncing layout
-        "transition-colors duration-150 ease-out",
-
-        // --- Keyboard focus (accessibility) ---
-        // focus-visible = show ring for keyboard users, not every mouse click
-        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600",
-
-        // --- Disabled + cursor (shared chrome; colors still come from variant) ---
-        "disabled:cursor-not-allowed disabled:opacity-70",
-        "cursor-pointer",
-
-        // --- Variant-specific colors / borders / hover rules ---
-        variantClasses[variant],
-
-        // --- Parent-provided classes last ---
-        className,
-      ]
-        .filter(Boolean)
-        .join(" ")}
-      // Spread remaining native button props (onClick, name, aria-*, …)
-      {...rest}
-    >
-      {/* children = whatever the parent nested between the tags */}
+    <button type={type} disabled={disabled} className={classes} {...rest}>
       {children}
     </button>
   );

@@ -16,6 +16,7 @@ import {
 } from "react-router";
 
 import type { Route } from "./+types/root";
+import { BannerComponent } from "./components/BannerComponent";
 import "./app.css";
 
 /** Global <link> tags (fonts, icons, etc.). */
@@ -53,7 +54,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 /** Renders the matched child route (see app/routes.ts). */
 export default function App() {
-  return <Outlet />;
+  return (
+    <>
+      <BannerComponent />
+      <Outlet />
+    </>
+  );
 }
 
 /**
