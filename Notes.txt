@@ -1,0 +1,7 @@
+NEEDS TO BE REVIEWED (Day 1)
+- ProductImage
+- DescriptionPanel
+- SelectorComponent
+
+NEEDS TO BE REVIEWED (Day 2)
+- Routes

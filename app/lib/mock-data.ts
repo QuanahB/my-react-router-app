@@ -3,6 +3,8 @@
  * Swap these out once listProducts() / getCart() return real SQL rows.
  */
 
+import productStill from "~/assets/birdLogo.avif";
+import productPreview from "~/assets/product-preview.mp4";
 import type { Cart, Product } from "./types";
 
 export const mockProducts: Product[] = [
@@ -13,6 +15,8 @@ export const mockProducts: Product[] = [
     description: "Light layer for warm weather.",
     price: 88,
     stock: 12,
+    image_url: productStill,
+    video_url: productPreview,
   },
   {
     id: 2,
@@ -21,6 +25,8 @@ export const mockProducts: Product[] = [
     description: "Everyday bag with a wide strap.",
     price: 34,
     stock: 24,
+    image_url: productStill,
+    video_url: productPreview,
   },
   {
     id: 3,
@@ -29,6 +35,8 @@ export const mockProducts: Product[] = [
     description: "Ribbed knit, one size.",
     price: 22,
     stock: 40,
+    image_url: productStill,
+    video_url: productPreview,
   },
   {
     id: 4,
@@ -37,6 +45,8 @@ export const mockProducts: Product[] = [
     description: "Cedar and bergamot bar.",
     price: 12,
     stock: 60,
+    image_url: productStill,
+    video_url: productPreview,
   },
 ];
 

@@ -7,6 +7,7 @@
 
 import { Link, useLoaderData } from "react-router";
 
+import { ProductImage } from "~/components/ProductImage";
 import { listProducts } from "~/lib/api";
 import { mockProducts } from "~/lib/mock-data";
 import type { Product } from "~/lib/types";
@@ -57,15 +58,12 @@ export default function Shop() {
           {products.map((product) => (
             <li key={product.id}>
               <article className="flex h-full flex-col gap-3">
-                {product.image_url ? (
-                  <img
-                    src={product.image_url}
-                    alt={product.name}
-                    className="aspect-square w-full object-cover"
-                  />
-                ) : (
-                  <div className="aspect-square w-full bg-stone-200" />
-                )}
+                <ProductImage
+                  src={product.image_url}
+                  videoSrc={product.video_url}
+                  alt={product.name}
+                  aspect="square"
+                />
                 <div className="flex flex-1 flex-col gap-1">
                   <h2 className="text-lg font-medium">{product.name}</h2>
                   {product.description ? (

@@ -20,6 +20,7 @@ import productStill from "~/assets/birdLogo.avif";
 import productPreview from "~/assets/product-preview.mp4";
 
 export type ProductImageAlternate = "main" | "alternate";
+export type ProductImageAspect = "video" | "square";
 
 export type ProductImageProps = {
   /** Still image shown until hover. */
@@ -29,11 +30,18 @@ export type ProductImageProps = {
   alt?: string;
   className?: string;
   alternate?: ProductImageAlternate;
+  /** Frame shape — `video` (16:9) for the homepage, `square` for the shop grid. */
+  aspect?: ProductImageAspect;
 } & Omit<ImgHTMLAttributes<HTMLImageElement>, "className" | "src" | "alt">;
 
 const alternateClasses: Record<ProductImageAlternate, string> = {
   main: ["bg-stone-900"].join(" "),
   alternate: ["bg-transparent"].join(" "),
+};
+
+const aspectClasses: Record<ProductImageAspect, string> = {
+  video: "aspect-video",
+  square: "aspect-square",
 };
 
 export function ProductImage({
@@ -42,6 +50,7 @@ export function ProductImage({
   alt = "Product preview",
   className = "",
   alternate = "main",
+  aspect = "video",
   ...rest
 }: ProductImageProps) {
   const [hovered, setHovered] = useState(false);
@@ -63,7 +72,8 @@ export function ProductImage({
   return (
     <div
       className={[
-        "relative w-full overflow-hidden aspect-video",
+        "relative w-full overflow-hidden",
+        aspectClasses[aspect],
         alternateClasses[alternate],
         className,
       ]

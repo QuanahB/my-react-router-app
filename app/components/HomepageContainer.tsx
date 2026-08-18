@@ -1,9 +1,9 @@
 /**
  * Homepage layout: one outer container, two inner columns, optional carousel.
  *
- * CSS Grid with 3 equal tracks:
- *   left  → col-span-2  (2/3 of the width)
- *   right → col-span-1  (1/3 of the width)
+ * CSS Grid with 3 equal tracks inside a centered, max-width frame:
+ *   left  → col-span-2  (2/3 of the container width)
+ *   right → col-span-1  (1/3 of the container width)
  *
  * Carousel:
  *   Pass `slides` (an array of { left, right } pairs). Arrow buttons
@@ -92,7 +92,7 @@ export function HomepageContainer({
   return (
     <div
       className={[
-        "relative grid w-full grid-cols-3",
+        "relative mx-auto grid w-full max-w-6xl grid-cols-3 px-4",
         alternateClasses[alternate],
         className,
       ]

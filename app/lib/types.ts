@@ -43,6 +43,8 @@ export type Product = {
   price: number;
   currency?: string;
   image_url?: string;
+  /** Optional hover preview clip (Flask URL or bundled asset). */
+  video_url?: string;
   /** Remaining sellable quantity from inventory in SQL. */
   stock: number;
   category_id?: number;
