@@ -1,21 +1,24 @@
 /**
  * Shopping cart — /cart
  *
- * Loader: GET /api/cart (forwards the session cookie so SSR sees the same cart).
- * Actions: update qty, remove a line, or POST /api/checkout.
+ * Loader: GET /api/cart. After Stripe, also GET /api/checkout/confirm.
+ * Actions: update qty, remove a line, or start Stripe Checkout.
  */
 
 import {
   Form,
   Link,
   data,
+  redirect,
   useActionData,
   useLoaderData,
 } from "react-router";
 
 import {
   checkout,
+  confirmCheckout,
   getCart,
+  getOrder,
   removeCartItem,
   updateCartItem,
 } from "~/lib/api";
@@ -32,17 +35,48 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
+  const url = new URL(request.url);
+  const checkoutState = url.searchParams.get("checkout");
+  const sessionId = url.searchParams.get("session_id");
+  const orderId = url.searchParams.get("order_id");
+
   const setCookies: string[] = [];
+  const opts = flaskRequestOptions(request, { captureSetCookie: setCookies });
+
+  // Stripe redirects here with session_id. Flask asks Stripe if it was paid.
+  let paidOrder: Order | null = null;
+  if (checkoutState === "success" && sessionId) {
+    try {
+      paidOrder = await confirmCheckout(sessionId, opts);
+    } catch {
+      if (orderId) {
+        try {
+          paidOrder = await getOrder(Number(orderId), opts);
+        } catch {
+          paidOrder = null;
+        }
+      }
+    }
+  }
+
   try {
-    const cart = await getCart(
-      flaskRequestOptions(request, { captureSetCookie: setCookies }),
-    );
+    const cart = await getCart(opts);
     return data(
-      { cart, usingMocks: false as const },
+      {
+        cart,
+        usingMocks: false as const,
+        checkoutState,
+        paidOrder,
+      },
       { headers: setCookieHeaders(setCookies) },
     );
   } catch {
-    return { cart: mockCart, usingMocks: true as const };
+    return {
+      cart: mockCart,
+      usingMocks: true as const,
+      checkoutState,
+      paidOrder,
+    };
   }
 }
 
@@ -68,8 +102,7 @@ export async function action({ request }: Route.ActionArgs) {
     }
 
     if (intent === "checkout") {
-      // Field names match CheckoutInput / Flask's POST /api/checkout body.
-      const order = await checkout(
+      const result = await checkout(
         {
           email: String(formData.get("email") ?? ""),
           shipping_name: String(formData.get("shipping_name") ?? ""),
@@ -80,7 +113,14 @@ export async function action({ request }: Route.ActionArgs) {
         },
         opts,
       );
-      return data({ order }, { headers: headers() });
+      if (!result.checkout_url) {
+        return data(
+          { error: "Stripe did not return a checkout URL" },
+          { headers: headers() },
+        );
+      }
+      // Leave this site for Stripe-hosted Checkout (test card 4242…).
+      return redirect(result.checkout_url, { headers: headers() });
     }
 
     return data(
@@ -112,10 +152,9 @@ function lineTotal(item: Cart["items"][number]) {
 }
 
 export default function CartPage() {
-  const { cart, usingMocks } = useLoaderData<typeof loader>();
+  const { cart, usingMocks, checkoutState, paidOrder } =
+    useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
-  const order: Order | undefined =
-    actionData && "order" in actionData ? actionData.order : undefined;
   const error =
     actionData && "error" in actionData ? actionData.error : undefined;
 
@@ -134,6 +173,11 @@ export default function CartPage() {
               ? `${cart.item_count} item${cart.item_count === 1 ? "" : "s"}`
               : null}
         </p>
+        {checkoutState === "cancel" ? (
+          <p className="mt-2 text-sm text-amber-800" role="status">
+            Payment was cancelled. Your cart is unchanged.
+          </p>
+        ) : null}
         {error ? (
           <p className="mt-2 text-sm text-red-700" role="alert">
             {error}
@@ -141,11 +185,14 @@ export default function CartPage() {
         ) : null}
       </header>
 
-      {order ? (
+      {paidOrder ? (
         <section className="space-y-4 border border-stone-200 p-6">
-          <h2 className="text-xl font-medium">Order placed</h2>
+          <h2 className="text-xl font-medium">
+            {paidOrder.status === "paid" ? "Payment received" : "Order pending"}
+          </h2>
           <p className="text-stone-600">
-            Order #{order.id} · {order.status} · {formatMoney(order.total, order.currency)}
+            Order #{paidOrder.id} · {paidOrder.status} ·{" "}
+            {formatMoney(paidOrder.total, paidOrder.currency)}
           </p>
           <Link
             to="/shop"
@@ -174,7 +221,6 @@ export default function CartPage() {
               >
                 <div>
                   <p className="font-medium">{lineLabel(item)}</p>
-                  {/* PATCH /api/cart/items/:id */}
                   <Form method="post" className="mt-2 flex items-center gap-2">
                     <input type="hidden" name="intent" value="update" />
                     <input type="hidden" name="item_id" value={item.id} />
@@ -231,10 +277,12 @@ export default function CartPage() {
             </Link>
           </div>
 
-          {/* POST /api/checkout — same field names as CheckoutInput */}
           <Form method="post" className="mt-10 space-y-4 border-t border-stone-200 pt-8">
             <input type="hidden" name="intent" value="checkout" />
             <h2 className="text-xl font-medium">Checkout</h2>
+            <p className="text-sm text-stone-600">
+              You will be sent to Stripe to pay (test card 4242 4242 4242 4242).
+            </p>
             <label className="block text-sm">
               Email
               <input
@@ -296,7 +344,7 @@ export default function CartPage() {
               disabled={usingMocks}
               className="inline-flex bg-stone-900 px-4 py-2 text-sm font-medium tracking-wide text-stone-50 hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Place order
+              Pay with Stripe
             </button>
           </Form>
         </>

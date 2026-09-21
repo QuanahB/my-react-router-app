@@ -118,6 +118,15 @@ export type CheckoutInput = {
   shipping_country?: string;
 };
 
+/**
+ * POST /api/checkout response: pending SQL order + Stripe-hosted payment URL.
+ * The browser should redirect to checkout_url — do not treat the order as paid yet.
+ */
+export type CheckoutStart = {
+  checkout_url: string;
+  order: Order;
+};
+
 /** Structured error thrown by the API client when Flask returns a non-OK status. */
 export class ApiError extends Error {
   status: number;

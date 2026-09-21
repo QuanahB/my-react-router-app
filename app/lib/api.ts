@@ -18,6 +18,7 @@ import {
   type ApiMessage,
   type Cart,
   type CheckoutInput,
+  type CheckoutStart,
   type HealthStatus,
   type Order,
   type Product,
@@ -246,16 +247,27 @@ export function removeCartItem(
   });
 }
 
-/** POST /api/checkout — place an order from the current cart. */
+/** POST /api/checkout — pending order + Stripe Checkout URL (not paid yet). */
 export function checkout(
   input: CheckoutInput,
   signalOrOptions?: AbortSignal | RequestOptions,
 ) {
-  return apiRequest<Order>("checkout", {
+  return apiRequest<CheckoutStart>("checkout", {
     ...asOptions(signalOrOptions),
     method: "POST",
     body: input,
   });
+}
+
+/** GET /api/checkout/confirm?session_id= — ask Flask to verify Stripe and mark paid. */
+export function confirmCheckout(
+  sessionId: string,
+  signalOrOptions?: AbortSignal | RequestOptions,
+) {
+  return apiRequest<Order>(
+    `checkout/confirm?session_id=${encodeURIComponent(sessionId)}`,
+    asOptions(signalOrOptions),
+  );
 }
 
 /** GET /api/orders/:id — look up a placed order (confirmation / tracking). */
