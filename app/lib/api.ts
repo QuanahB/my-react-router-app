@@ -25,16 +25,32 @@ import {
   type UpdateCartItemInput,
 } from "./types";
 
-type RequestOptions = {
+export type RequestOptions = {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: unknown;
-  /** Extra headers merged into the request. */
+  /** Extra headers merged into the request (include Cookie on SSR). */
   headers?: HeadersInit;
   /** Abort after this many ms (defaults to API_TIMEOUT_MS). */
   timeoutMs?: number;
   /** Optional AbortSignal from the caller (e.g. React Router request.signal). */
   signal?: AbortSignal;
+  /**
+   * Push Flask Set-Cookie values here so a loader/action can copy them
+   * onto the React Router response (see setCookieHeaders in session.ts).
+   */
+  captureSetCookie?: string[];
 };
+
+/** Accept either a raw AbortSignal (old call sites) or a full options object. */
+function asOptions(
+  signalOrOptions?: AbortSignal | RequestOptions,
+): RequestOptions {
+  if (!signalOrOptions) return {};
+  if (signalOrOptions instanceof AbortSignal) {
+    return { signal: signalOrOptions };
+  }
+  return signalOrOptions;
+}
 
 /**
  * Low-level fetch helper. Prefer the named storefront methods below
@@ -50,6 +66,7 @@ export async function apiRequest<T>(
     headers,
     timeoutMs = API_TIMEOUT_MS,
     signal: externalSignal,
+    captureSetCookie,
   } = options;
 
   // Ensure path joins cleanly whether callers pass "products" or "/products".
@@ -83,6 +100,16 @@ export async function apiRequest<T>(
       credentials: "include",
     });
 
+    // SSR: Node fetch will not apply Set-Cookie to the browser; the caller
+    // must copy these onto the React Router response.
+    if (captureSetCookie) {
+      const incoming =
+        typeof response.headers.getSetCookie === "function"
+          ? response.headers.getSetCookie()
+          : [];
+      captureSetCookie.push(...incoming);
+    }
+
     const text = await response.text();
     let data: unknown = null;
     if (text) {
@@ -110,7 +137,10 @@ export async function apiRequest<T>(
   } catch (error) {
     if (error instanceof ApiError) throw error;
 
-    if (error instanceof DOMException && error.name === "AbortError") {
+    if (
+      (error instanceof DOMException && error.name === "AbortError") ||
+      (error instanceof Error && error.name === "AbortError")
+    ) {
       throw new ApiError("Request timed out or was cancelled", 408);
     }
 
@@ -141,41 +171,54 @@ function toQueryString(params?: ProductListParams): string {
 // ---------------------------------------------------------------------------
 
 /** GET /api/health — confirm Flask (and optionally the store DB) is reachable. */
-export function getHealth(signal?: AbortSignal) {
-  return apiRequest<HealthStatus>("health", { signal });
+export function getHealth(signalOrOptions?: AbortSignal | RequestOptions) {
+  return apiRequest<HealthStatus>("health", asOptions(signalOrOptions));
 }
 
 /** GET /api/products — catalog listing (optional category / search filters). */
 export function listProducts(
   params?: ProductListParams,
-  signal?: AbortSignal,
+  signalOrOptions?: AbortSignal | RequestOptions,
 ) {
-  return apiRequest<Product[]>(`products${toQueryString(params)}`, { signal });
+  return apiRequest<Product[]>(
+    `products${toQueryString(params)}`,
+    asOptions(signalOrOptions),
+  );
 }
 
 /** GET /api/products/:id — single product detail + stock. */
-export function getProduct(id: number, signal?: AbortSignal) {
-  return apiRequest<Product>(`products/${id}`, { signal });
+export function getProduct(
+  id: number,
+  signalOrOptions?: AbortSignal | RequestOptions,
+) {
+  return apiRequest<Product>(`products/${id}`, asOptions(signalOrOptions));
 }
 
 /** GET /api/products/slug/:slug — product detail by URL-friendly slug. */
-export function getProductBySlug(slug: string, signal?: AbortSignal) {
-  return apiRequest<Product>(`products/slug/${encodeURIComponent(slug)}`, {
-    signal,
-  });
+export function getProductBySlug(
+  slug: string,
+  signalOrOptions?: AbortSignal | RequestOptions,
+) {
+  return apiRequest<Product>(
+    `products/slug/${encodeURIComponent(slug)}`,
+    asOptions(signalOrOptions),
+  );
 }
 
 /** GET /api/cart — current shopping cart (session or authenticated customer). */
-export function getCart(signal?: AbortSignal) {
-  return apiRequest<Cart>("cart", { signal });
+export function getCart(signalOrOptions?: AbortSignal | RequestOptions) {
+  return apiRequest<Cart>("cart", asOptions(signalOrOptions));
 }
 
 /** POST /api/cart/items — add a product to the cart (Flask updates SQL). */
-export function addToCart(input: AddToCartInput, signal?: AbortSignal) {
+export function addToCart(
+  input: AddToCartInput,
+  signalOrOptions?: AbortSignal | RequestOptions,
+) {
   return apiRequest<Cart>("cart/items", {
+    ...asOptions(signalOrOptions),
     method: "POST",
     body: input,
-    signal,
   });
 }
 
@@ -183,41 +226,50 @@ export function addToCart(input: AddToCartInput, signal?: AbortSignal) {
 export function updateCartItem(
   itemId: number,
   input: UpdateCartItemInput,
-  signal?: AbortSignal,
+  signalOrOptions?: AbortSignal | RequestOptions,
 ) {
   return apiRequest<Cart>(`cart/items/${itemId}`, {
+    ...asOptions(signalOrOptions),
     method: "PATCH",
     body: input,
-    signal,
   });
 }
 
 /** DELETE /api/cart/items/:id — remove a line from the cart. */
-export function removeCartItem(itemId: number, signal?: AbortSignal) {
+export function removeCartItem(
+  itemId: number,
+  signalOrOptions?: AbortSignal | RequestOptions,
+) {
   return apiRequest<Cart>(`cart/items/${itemId}`, {
+    ...asOptions(signalOrOptions),
     method: "DELETE",
-    signal,
   });
 }
 
 /** POST /api/checkout — place an order from the current cart. */
-export function checkout(input: CheckoutInput, signal?: AbortSignal) {
+export function checkout(
+  input: CheckoutInput,
+  signalOrOptions?: AbortSignal | RequestOptions,
+) {
   return apiRequest<Order>("checkout", {
+    ...asOptions(signalOrOptions),
     method: "POST",
     body: input,
-    signal,
   });
 }
 
 /** GET /api/orders/:id — look up a placed order (confirmation / tracking). */
-export function getOrder(id: number, signal?: AbortSignal) {
-  return apiRequest<Order>(`orders/${id}`, { signal });
+export function getOrder(
+  id: number,
+  signalOrOptions?: AbortSignal | RequestOptions,
+) {
+  return apiRequest<Order>(`orders/${id}`, asOptions(signalOrOptions));
 }
 
 /** DELETE /api/cart — empty the cart (e.g. after a successful checkout). */
-export function clearCart(signal?: AbortSignal) {
+export function clearCart(signalOrOptions?: AbortSignal | RequestOptions) {
   return apiRequest<ApiMessage>("cart", {
+    ...asOptions(signalOrOptions),
     method: "DELETE",
-    signal,
   });
 }

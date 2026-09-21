@@ -1,16 +1,17 @@
 /**
  * Shop catalog — /shop
  *
- * Loader asks Flask for products. If the API is down, mock catalog data
- * still renders so you can build the UI without the backend.
+ * Loader: GET /api/products (falls back to mock-data.ts if Flask is down).
+ * Action: POST add-to-cart, then redirect to /cart.
  */
 
-import { Link, useLoaderData } from "react-router";
+import { Form, Link, data, redirect, useActionData, useLoaderData } from "react-router";
 
 import { ProductImage } from "~/components/ProductImage";
-import { listProducts } from "~/lib/api";
+import { addToCart, listProducts } from "~/lib/api";
 import { mockProducts } from "~/lib/mock-data";
-import type { Product } from "~/lib/types";
+import { flaskRequestOptions, setCookieHeaders } from "~/lib/session";
+import { ApiError, type Product } from "~/lib/types";
 import type { Route } from "./+types/shop";
 
 export function meta({}: Route.MetaArgs) {
@@ -29,6 +30,31 @@ export async function loader({ request }: Route.LoaderArgs) {
   }
 }
 
+/**
+ * Form posts land here (not in the component).
+ * `intent=add-to-cart` plus `product_id` match AddToCartInput on Flask.
+ */
+export async function action({ request }: Route.ActionArgs) {
+  const formData = await request.formData();
+  const productId = Number(formData.get("product_id"));
+  const setCookies: string[] = [];
+  const opts = flaskRequestOptions(request, { captureSetCookie: setCookies });
+
+  try {
+    await addToCart({ product_id: productId, quantity: 1 }, opts);
+  } catch (error) {
+    const message =
+      error instanceof ApiError ? error.message : "Could not add to cart";
+    return data(
+      { error: message },
+      { headers: setCookieHeaders(setCookies) },
+    );
+  }
+
+  // Send Flask's session cookie back to the browser, then open /cart.
+  return redirect("/cart", { headers: setCookieHeaders(setCookies) });
+}
+
 function formatPrice(product: Product) {
   const currency = product.currency ?? "USD";
   return new Intl.NumberFormat("en-US", {
@@ -39,6 +65,7 @@ function formatPrice(product: Product) {
 
 export default function Shop() {
   const { products, usingMocks } = useLoaderData<typeof loader>();
+  const actionData = useActionData<typeof action>();
 
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-10">
@@ -49,6 +76,11 @@ export default function Shop() {
             ? "Showing sample products until the Flask catalog is connected."
             : "In stock from the store catalog."}
         </p>
+        {actionData && "error" in actionData && actionData.error ? (
+          <p className="mt-2 text-sm text-red-700" role="alert">
+            {actionData.error}
+          </p>
+        ) : null}
       </header>
 
       {products.length === 0 ? (
@@ -73,12 +105,26 @@ export default function Shop() {
                     {formatPrice(product)}
                   </p>
                 </div>
-                <Link
-                  to="/cart"
-                  className="inline-flex items-center justify-center bg-stone-900 px-4 py-2 text-sm font-medium tracking-wide text-stone-50 hover:bg-stone-800"
-                >
-                  Add to cart
-                </Link>
+                {/* POST to this route's action → Flask POST /api/cart/items */}
+                <Form method="post">
+                  <input type="hidden" name="intent" value="add-to-cart" />
+                  <input type="hidden" name="product_id" value={product.id} />
+                  <button
+                    type="submit"
+                    disabled={usingMocks || product.stock < 1}
+                    className="inline-flex w-full items-center justify-center bg-stone-900 px-4 py-2 text-sm font-medium tracking-wide text-stone-50 hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {product.stock < 1 ? "Out of stock" : "Add to cart"}
+                  </button>
+                </Form>
+                {usingMocks ? (
+                  <p className="text-xs text-stone-500">
+                    Start Flask on port 5000 to add real items.{" "}
+                    <Link to="/cart" className="underline">
+                      View cart
+                    </Link>
+                  </p>
+                ) : null}
               </article>
             </li>
           ))}
