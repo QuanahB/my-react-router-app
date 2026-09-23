@@ -45,6 +45,6 @@ export const API_BASE_URL = resolveApiBaseUrl();
 
 /**
  * Default request timeout in milliseconds.
- * Keeps catalog/cart pages from hanging if Flask or the database is down.
+ * 45s so a sleeping Render free instance can finish starting before we mock.
  */
-export const API_TIMEOUT_MS = 10_000;
+export const API_TIMEOUT_MS = 45_000;

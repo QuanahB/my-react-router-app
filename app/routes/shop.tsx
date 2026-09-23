@@ -24,9 +24,11 @@ export function meta({}: Route.MetaArgs) {
 export async function loader({ request }: Route.LoaderArgs) {
   try {
     const products = await listProducts(undefined, request.signal);
-    return { products, usingMocks: false as const };
-  } catch {
-    return { products: mockProducts, usingMocks: true as const };
+    return { products, usingMocks: false as const, apiError: null as string | null };
+  } catch (error) {
+    const apiError =
+      error instanceof ApiError ? error.message : "Could not reach the store API";
+    return { products: mockProducts, usingMocks: true as const, apiError };
   }
 }
 
@@ -64,7 +66,7 @@ function formatPrice(product: Product) {
 }
 
 export default function Shop() {
-  const { products, usingMocks } = useLoaderData<typeof loader>();
+  const { products, usingMocks, apiError } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
 
   return (
@@ -73,7 +75,7 @@ export default function Shop() {
         <h1 className="text-3xl font-semibold tracking-tight">Shop</h1>
         <p className="mt-2 text-stone-600">
           {usingMocks
-            ? "Showing sample products until the Flask catalog is connected."
+            ? `Showing sample products — ${apiError ?? "Flask catalog is not connected."}`
             : "In stock from the store catalog."}
         </p>
         {actionData && "error" in actionData && actionData.error ? (

@@ -11,6 +11,7 @@
 import { useLoaderData } from "react-router";
 
 import { getHealth } from "~/lib/api";
+import { API_BASE_URL } from "~/lib/config";
 import { ApiError, type HealthStatus } from "~/lib/types";
 import type { Route } from "./+types/home";
 import { Welcome } from "../welcome/welcome";
@@ -76,8 +77,7 @@ export default function Home() {
         ) : (
           <>
             Store API not reachable yet
-            {health.message ? ` — ${health.message}` : null}. Start Flask on
-            port 5000 (see README).
+            {health.message ? ` — ${health.message}` : null}. Tried {API_BASE_URL}
           </>
         )}
       </div>
